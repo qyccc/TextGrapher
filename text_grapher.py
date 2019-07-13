@@ -82,10 +82,8 @@ class CrimeMining:
                 obj = self.complete_VOB(verb_wd, child_dict_list)
                 subj = sub_wd
                 verb = verb_wd
-                if not obj:
-                    svo.append([subj, verb])
-                else:
-                    svo.append([subj, verb+obj])
+                if obj:
+                    svo.append([subj, verb, obj])
         return svo
 
     '''过滤出与命名实体相关的事件三元组'''
@@ -177,7 +175,26 @@ class CrimeMining:
                 ners += ner
                 ner_sents.append([words, postags])
 
-        # 获取文章关键词, 并图谱组织, 这个可以做
+        # 对三元组进行event构建，这个可以做
+        print(ners)
+        ns = []
+        for n in ners:
+            ns .append(n.split('/')[0])
+            print(n.split('/')[0])
+        print(ns)
+        for t in triples:
+            for i in t:
+                if i in ns:
+                    events.append([t[0], t[1], t[2]])
+
+        ner_dict = {i[0]: i[1] for i in Counter(ners).most_common()}
+
+        # 获取全文命名实体共现信息,构建事件共现网络
+        co_dict = self.collect_coexist(ner_sents, list(ner_dict.keys()))
+        co_events = [[i.split('@')[0].split('/')[0], " ", i.split('@')[1].split('/')[0]] for i in co_dict]
+        events += co_events
+
+        '''# 获取文章关键词, 并图谱组织, 这个可以做
         keywords = [i[0] for i in self.extract_keywords(words_list)]
         for keyword in keywords:
             name = keyword
@@ -208,7 +225,7 @@ class CrimeMining:
         events += co_events
         #将关键词与实体进行关系抽取
         events_entity_keyword = self.rel_entity_keyword(ners, keywords, subsents_seg)
-        events += events_entity_keyword
+        events += events_entity_keyword'''
         #对事件网络进行图谱化展示
         self.graph_shower.create_page(events)
 
@@ -396,4 +413,4 @@ content8 = '''
 
 '''
 handler = CrimeMining()
-handler.main(content8)
+handler.main(content5)
